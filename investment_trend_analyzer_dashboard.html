@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Investment Trend Analyzer Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --good: #22c55e;
+      --mid: #f59e0b;
+      --bad: #ef4444;
+      --accent: #60a5fa;
+      --purple: #a78bfa;
+      --cyan: #22d3ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #172554 0, #0f172a 38%, #020617 100%);
+      color: var(--text);
+    }
+    header {
+      padding: 28px 32px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15, 23, 42, 0.84);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); margin-top: 6px; }
+    main { padding: 24px 32px 48px; max-width: 1500px; margin: auto; }
+    .grid { display: grid; gap: 18px; }
+    .top-grid { grid-template-columns: repeat(4, minmax(180px, 1fr)); }
+    .two-grid { grid-template-columns: 1.3fr 1fr; }
+    .three-grid { grid-template-columns: repeat(3, 1fr); }
+    .card {
+      background: rgba(17, 24, 39, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+    }
+    .metric-label { color: var(--muted); font-size: 13px; }
+    .metric-value { font-size: 30px; font-weight: 750; margin-top: 6px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 9px; border-radius: 999px;
+      background: rgba(96,165,250,0.14); color: #bfdbfe; font-size: 12px;
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button {
+      border: 0; border-radius: 10px; padding: 10px 13px;
+      background: var(--accent); color: #06111f; font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    button.danger { background: #7f1d1d; color: #fee2e2; }
+    input, select, textarea {
+      background: #020617;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      outline: none;
+      min-width: 70px;
+    }
+    textarea { width: 100%; min-height: 96px; resize: vertical; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; }
+    th, td {
+      text-align: left; padding: 10px 9px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    th { color: #cbd5e1; font-weight: 700; background: rgba(255,255,255,0.03); }
+    td input { width: 74px; }
+    td input.ticker { width: 90px; text-transform: uppercase; }
+    .score-pill {
+      display: inline-block; min-width: 52px; text-align: center;
+      padding: 5px 8px; border-radius: 999px; font-weight: 800;
+      color: #06111f;
+    }
+    .good { background: var(--good); }
+    .mid { background: var(--mid); }
+    .bad { background: var(--bad); color: #fff; }
+    .chart { width: 100%; min-height: 285px; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    h2 { font-size: 17px; margin: 0; }
+    .small { font-size: 12px; color: var(--muted); }
+    .bar-wrap { height: 10px; background: #020617; border-radius: 999px; overflow: hidden; }
+    .bar { height: 100%; border-radius: 999px; }
+    .warning {
+      border: 1px solid rgba(245,158,11,0.35);
+      background: rgba(245,158,11,0.10);
+      color: #fde68a;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 22px;
+      line-height: 1.45;
+    }
+    @media (max-width: 1000px) {
+      .top-grid, .two-grid, .three-grid { grid-template-columns: 1fr; }
+      main { padding: 18px; }
+      header { padding: 22px 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Investment Trend Analyzer Dashboard</h1>
+  <div class="subtitle">Interactive scoring dashboard for trend, fundamental, valuation, risk, sentiment, macro, and scenario analysis.</div>
+</header>
+
+<main>
+  <div class="grid top-grid">
+    <div class="card">
+      <div class="metric-label">Portfolio Quality Score</div>
+      <div id="portfolioScore" class="metric-value">—</div>
+      <div class="small">Weighted by allocation</div>
+    </div>
+    <div class="card">
+      <div class="metric-label">Portfolio Risk Rating</div>
+      <div id="portfolioRisk" class="metric-value">—</div>
+      <div class="small">Lower risk score implies higher risk</div>
+    </div>
+    <div class="card">
+      <div class="metric-label">Diversification Rating</div>
+      <div id="diversification" class="metric-value">—</div>
+      <div class="small">Based on concentration</div>
+    </div>
+    <div class="card">
+      <div class="metric-label">Average Expected Return</div>
+      <div id="expectedReturn" class="metric-value">—</div>
+      <div class="small">Scenario-weighted estimate</div>
+    </div>
+  </div>
+
+  <div class="grid two-grid" style="margin-top:18px;">
+    <section class="card">
+      <div class="section-title">
+        <h2>Investment Dashboard</h2>
+        <div class="row">
+          <button onclick="addRow()">Add Asset</button>
+          <button class="secondary" onclick="normalizeAllocations()">Normalize Allocations</button>
+          <button class="danger" onclick="resetDashboard()">Reset</button>
+        </div>
+      </div>
+      <div class="warning">
+        Enter scores from 0–100. Final score formula: 25% fundamentals, 20% technicals, 20% valuation, 15% sentiment, 10% macro, 10% risk. Risk score is inverted conceptually: higher score means lower risk.
+      </div>
+      <div style="margin-top:14px; overflow-x:auto;">
+        <table id="assetTable">
+          <thead>
+            <tr>
+              <th>Ticker</th><th>Allocation %</th><th>Trend</th><th>Fund.</th><th>Valuation</th><th>Risk</th><th>Sent.</th><th>Macro</th><th>Exp. Ret. %</th><th>Final</th><th>Class</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">
+        <h2>Thesis Builder</h2>
+        <span class="tag">Editable</span>
+      </div>
+      <label class="small">Current thesis</label>
+      <textarea id="thesis">Balanced multi-asset dashboard using probability-based scenario scoring. Replace sample scores with verified market and financial data before making decisions.</textarea>
+      <div class="grid three-grid" style="margin-top:12px;">
+        <div>
+          <label class="small">Bull Case %</label>
+          <input id="bullProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/>
+        </div>
+        <div>
+          <label class="small">Base Case %</label>
+          <input id="baseProb" type="number" value="50" min="0" max="100" onchange="recalculate()"/>
+        </div>
+        <div>
+          <label class="small">Bear Case %</label>
+          <input id="bearProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/>
+        </div>
+      </div>
+      <div id="scenarioText" style="margin-top:14px;"></div>
+    </section>
+  </div>
+
+  <div class="grid two-grid" style="margin-top:18px;">
+    <section class="card">
+      <div class="section-title"><h2>Score Comparison</h2><span class="small">Final score by asset</span></div>
+      <svg id="barChart" class="chart" viewBox="0 0 760 310" role="img"></svg>
+    </section>
+    <section class="card">
+      <div class="section-title"><h2>Risk vs Return</h2><span class="small">Risk score vs expected return</span></div>
+      <svg id="scatterChart" class="chart" viewBox="0 0 640 310" role="img"></svg>
+    </section>
+  </div>
+
+  <div class="grid two-grid" style="margin-top:18px;">
+    <section class="card">
+      <div class="section-title"><h2>Trend Comparison</h2><span class="small">Sample momentum path</span></div>
+      <svg id="lineChart" class="chart" viewBox="0 0 760 310" role="img"></svg>
+    </section>
+    <section class="card">
+      <div class="section-title"><h2>Portfolio Allocation</h2><span class="small">Allocation pie</span></div>
+      <svg id="pieChart" class="chart" viewBox="0 0 640 310" role="img"></svg>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:18px;">
+    <div class="section-title"><h2>Final Recommendation Logic</h2><span class="tag">Automated</span></div>
+    <div id="recommendations"></div>
+  </section>
+
+  <div class="footer-note">
+    Investment markets involve risk. This analysis is educational in nature and should not be considered personalized financial advice. Past performance does not guarantee future results.
+  </div>
+</main>
+
+<script>
+const weights = { fundamental: .25, trend: .20, valuation: .20, sentiment: .15, macro: .10, risk: .10 };
+
+let assets = [
+  { ticker: "SPY", allocation: 40, trend: 72, fundamental: 78, valuation: 58, risk: 72, sentiment: 68, macro: 64, expectedReturn: 7.0 },
+  { ticker: "QQQ", allocation: 25, trend: 80, fundamental: 76, valuation: 48, risk: 60, sentiment: 74, macro: 62, expectedReturn: 9.5 },
+  { ticker: "TLT", allocation: 20, trend: 55, fundamental: 62, valuation: 66, risk: 68, sentiment: 54, macro: 58, expectedReturn: 5.0 },
+  { ticker: "GLD", allocation: 15, trend: 70, fundamental: 60, valuation: 63, risk: 74, sentiment: 66, macro: 70, expectedReturn: 6.2 }
+];
+
+function clamp(n, min=0, max=100) { return Math.max(min, Math.min(max, Number(n) || 0)); }
+function finalScore(a) {
+  return a.fundamental*weights.fundamental + a.trend*weights.trend + a.valuation*weights.valuation + a.sentiment*weights.sentiment + a.macro*weights.macro + a.risk*weights.risk;
+}
+function classification(score) {
+  if (score >= 90) return "Elite";
+  if (score >= 80) return "Strong Buy Candidate";
+  if (score >= 70) return "Attractive";
+  if (score >= 60) return "Neutral";
+  if (score >= 50) return "Speculative";
+  return "High Risk";
+}
+function riskLabel(score) {
+  if (score >= 75) return "Low";
+  if (score >= 60) return "Moderate";
+  if (score >= 45) return "Elevated";
+  return "High";
+}
+function pillClass(score) {
+  if (score >= 70) return "good";
+  if (score >= 55) return "mid";
+  return "bad";
+}
+function renderTable() {
+  const tbody = document.querySelector("#assetTable tbody");
+  tbody.innerHTML = "";
+  assets.forEach((a, i) => {
+    const s = finalScore(a);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input class="ticker" value="${a.ticker}" onchange="updateAsset(${i}, 'ticker', this.value.toUpperCase())"></td>
+      <td><input type="number" value="${a.allocation}" onchange="updateAsset(${i}, 'allocation', this.value)"></td>
+      <td><input type="number" value="${a.trend}" min="0" max="100" onchange="updateAsset(${i}, 'trend', this.value)"></td>
+      <td><input type="number" value="${a.fundamental}" min="0" max="100" onchange="updateAsset(${i}, 'fundamental', this.value)"></td>
+      <td><input type="number" value="${a.valuation}" min="0" max="100" onchange="updateAsset(${i}, 'valuation', this.value)"></td>
+      <td><input type="number" value="${a.risk}" min="0" max="100" onchange="updateAsset(${i}, 'risk', this.value)"></td>
+      <td><input type="number" value="${a.sentiment}" min="0" max="100" onchange="updateAsset(${i}, 'sentiment', this.value)"></td>
+      <td><input type="number" value="${a.macro}" min="0" max="100" onchange="updateAsset(${i}, 'macro', this.value)"></td>
+      <td><input type="number" value="${a.expectedReturn}" onchange="updateAsset(${i}, 'expectedReturn', this.value)"></td>
+      <td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td>
+      <td>${classification(s)}</td>
+      <td><button class="danger" onclick="removeAsset(${i})">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+function updateAsset(i, key, value) {
+  if (key === "ticker") assets[i][key] = value || "N/A";
+  else assets[i][key] = key === "expectedReturn" ? Number(value || 0) : clamp(value);
+  recalculate();
+}
+function addRow() {
+  assets.push({ ticker: "NEW", allocation: 0, trend: 50, fundamental: 50, valuation: 50, risk: 50, sentiment: 50, macro: 50, expectedReturn: 5 });
+  recalculate();
+}
+function removeAsset(i) {
+  assets.splice(i, 1);
+  recalculate();
+}
+function normalizeAllocations() {
+  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0);
+  if (!total) return;
+  assets = assets.map(a => ({ ...a, allocation: +(a.allocation / total * 100).toFixed(2) }));
+  recalculate();
+}
+function resetDashboard() {
+  assets = [
+    { ticker: "SPY", allocation: 40, trend: 72, fundamental: 78, valuation: 58, risk: 72, sentiment: 68, macro: 64, expectedReturn: 7.0 },
+    { ticker: "QQQ", allocation: 25, trend: 80, fundamental: 76, valuation: 48, risk: 60, sentiment: 74, macro: 62, expectedReturn: 9.5 },
+    { ticker: "TLT", allocation: 20, trend: 55, fundamental: 62, valuation: 66, risk: 68, sentiment: 54, macro: 58, expectedReturn: 5.0 },
+    { ticker: "GLD", allocation: 15, trend: 70, fundamental: 60, valuation: 63, risk: 74, sentiment: 66, macro: 70, expectedReturn: 6.2 }
+  ];
+  recalculate();
+}
+function portfolioWeighted(metricFn) {
+  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
+  return assets.reduce((s,a)=>s + metricFn(a) * (Number(a.allocation||0)/total),0);
+}
+function concentrationScore() {
+  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
+  const hhi = assets.reduce((s,a)=>s+Math.pow((a.allocation||0)/total,2),0);
+  return Math.max(0, Math.min(100, 100 - (hhi * 100 - 20)));
+}
+function recalculate() {
+  renderTable();
+  const score = portfolioWeighted(finalScore);
+  const risk = portfolioWeighted(a=>a.risk);
+  const exp = portfolioWeighted(a=>a.expectedReturn);
+  const div = concentrationScore();
+  document.getElementById("portfolioScore").textContent = score.toFixed(1);
+  document.getElementById("portfolioRisk").textContent = riskLabel(risk);
+  document.getElementById("diversification").textContent = div >= 75 ? "Strong" : div >= 55 ? "Moderate" : "Concentrated";
+  document.getElementById("expectedReturn").textContent = exp.toFixed(1) + "%";
+  renderScenario(score, exp);
+  renderRecommendations();
+  drawBarChart();
+  drawScatter();
+  drawLine();
+  drawPie();
+}
+function renderScenario(score, exp) {
+  let bp = Number(document.getElementById("bullProb").value || 25);
+  let base = Number(document.getElementById("baseProb").value || 50);
+  let bear = Number(document.getElementById("bearProb").value || 25);
+  const total = bp + base + bear || 1;
+  bp = bp / total * 100; base = base / total * 100; bear = bear / total * 100;
+  const bullRet = exp + 6;
+  const baseRet = exp;
+  const bearRet = exp - 10;
+  const weighted = (bullRet*bp + baseRet*base + bearRet*bear)/100;
+  document.getElementById("scenarioText").innerHTML = `
+    <div class="grid three-grid">
+      <div><span class="tag">Bull ${bp.toFixed(0)}%</span><p class="small">Catalysts: earnings growth, margin expansion, favorable macro. Potential return: <b>${bullRet.toFixed(1)}%</b></p></div>
+      <div><span class="tag">Base ${base.toFixed(0)}%</span><p class="small">Most likely path: normalized growth and mixed valuation effects. Expected return: <b>${baseRet.toFixed(1)}%</b></p></div>
+      <div><span class="tag">Bear ${bear.toFixed(0)}%</span><p class="small">Risks: valuation compression, recession, higher rates, liquidity shocks. Downside case: <b>${bearRet.toFixed(1)}%</b></p></div>
+    </div>
+    <div class="small">Scenario-weighted expected return: <b>${weighted.toFixed(1)}%</b>. Confidence level: <b>${score >= 75 ? "Moderate-High" : score >= 60 ? "Moderate" : "Low-Moderate"}</b>.</div>`;
+}
+function renderRecommendations() {
+  const rows = assets.map(a => {
+    const s = finalScore(a);
+    const thesis = s >= 70 ? "Favorable score profile; monitor valuation and downside risk." :
+                   s >= 60 ? "Neutral profile; requires stronger trend, fundamentals, or valuation support." :
+                   "Higher-risk profile; position sizing and risk controls are important.";
+    return `<tr><td>${a.ticker}</td><td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td><td>${classification(s)}</td><td>${riskLabel(a.risk)}</td><td>${thesis}</td></tr>`;
+  }).join("");
+  document.getElementById("recommendations").innerHTML = `
+    <table><thead><tr><th>Ticker</th><th>Confidence</th><th>Recommendation Class</th><th>Risk Level</th><th>Current Thesis</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function svg(tag, attrs={}, content="") {
+  const attr = Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ");
+  return `<${tag} ${attr}>${content}</${tag}>`;
+}
+function drawBarChart() {
+  const el = document.getElementById("barChart");
+  const w=760,h=310,p=44, max=100;
+  const bw = (w - p*2) / Math.max(assets.length,1) * .62;
+  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
+  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
+  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
+  assets.forEach((a,i)=>{
+    const s=finalScore(a), x=p+i*((w-p*2)/assets.length)+20, y=h-p-(s/max)*(h-p*2);
+    const color=s>=70?"#22c55e":s>=55?"#f59e0b":"#ef4444";
+    out += svg("rect",{x,y,width:bw,height:h-p-y,rx:8,fill:color,opacity:.9});
+    out += svg("text",{x:x+bw/2,y:h-18,fill:"#cbd5e1","font-size":12,"text-anchor":"middle"},a.ticker);
+    out += svg("text",{x:x+bw/2,y:y-8,fill:"#e5e7eb","font-size":12,"text-anchor":"middle"},s.toFixed(0));
+  });
+  el.innerHTML = out;
+}
+function drawScatter() {
+  const el = document.getElementById("scatterChart");
+  const w=640,h=310,p=46;
+  const returns = assets.map(a=>a.expectedReturn);
+  const minR = Math.min(-10, ...returns)-1, maxR = Math.max(15, ...returns)+1;
+  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
+  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
+  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
+  out += svg("text",{x:w/2,y:h-8,fill:"#94a3b8","font-size":12,"text-anchor":"middle"},"Risk score: higher = lower risk");
+  out += svg("text",{x:15,y:h/2,fill:"#94a3b8","font-size":12,transform:`rotate(-90 15 ${h/2})`},"Expected return");
+  assets.forEach(a=>{
+    const x=p+(a.risk/100)*(w-p*2);
+    const y=h-p-((a.expectedReturn-minR)/(maxR-minR))*(h-p*2);
+    out += svg("circle",{cx:x,cy:y,r:10,fill:"#60a5fa",opacity:.9});
+    out += svg("text",{x:x+13,y:y+4,fill:"#e5e7eb","font-size":12},a.ticker);
+  });
+  el.innerHTML = out;
+}
+function drawLine() {
+  const el = document.getElementById("lineChart");
+  const w=760,h=310,p=44;
+  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
+  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
+  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
+  const labels=["1M","3M","6M","1Y","Now"];
+  labels.forEach((l,i)=>out += svg("text",{x:p+i*(w-p*2)/4,y:h-18,fill:"#94a3b8","font-size":11,"text-anchor":"middle"},l));
+  const colors=["#60a5fa","#22d3ee","#a78bfa","#f59e0b","#22c55e","#ef4444"];
+  assets.forEach((a,idx)=>{
+    const base = a.trend;
+    const vals=[base-12+idx*2, base-7, base-4+idx, base-2, base].map(v=>Math.max(5,Math.min(95,v)));
+    const pts=vals.map((v,i)=>[p+i*(w-p*2)/4, h-p-(v/100)*(h-p*2)]);
+    out += svg("polyline",{points:pts.map(pt=>pt.join(",")).join(" "),fill:"none",stroke:colors[idx%colors.length],"stroke-width":3,opacity:.9});
+    const last=pts[pts.length-1];
+    out += svg("text",{x:last[0]+8,y:last[1]+4,fill:colors[idx%colors.length],"font-size":12},a.ticker);
+  });
+  el.innerHTML = out;
+}
+function drawPie() {
+  const el = document.getElementById("pieChart");
+  const w=640,h=310,cx=180,cy=155,r=105;
+  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
+  const colors=["#60a5fa","#22d3ee","#a78bfa","#f59e0b","#22c55e","#ef4444","#94a3b8"];
+  let angle=-Math.PI/2, out="";
+  assets.forEach((a,i)=>{
+    const slice = (a.allocation/total) * Math.PI*2;
+    const x1=cx+Math.cos(angle)*r, y1=cy+Math.sin(angle)*r;
+    const x2=cx+Math.cos(angle+slice)*r, y2=cy+Math.sin(angle+slice)*r;
+    const large = slice > Math.PI ? 1 : 0;
+    out += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${colors[i%colors.length]}" opacity=".92"></path>`;
+    angle += slice;
+  });
+  assets.forEach((a,i)=>{
+    const y=65+i*28;
+    out += svg("rect",{x:340,y:y-12,width:14,height:14,rx:3,fill:colors[i%colors.length]});
+    out += svg("text",{x:362,y,fill:"#e5e7eb","font-size":13},`${a.ticker}: ${Number(a.allocation||0).toFixed(1)}%`);
+  });
+  el.innerHTML = out;
+}
+recalculate();
+</script>
+</body>
+</html>
