@@ -145,6 +145,11 @@
   </div>
 
   <section class="card" style="margin-top:16px;"><div class="section-title"><h2>Ticker & Price Interpretation</h2><span class="tag">Live + Model Inputs</span></div><div id="tickerInterpretations" class="interpretation-grid"></div></section>
+  <section class="card" style="margin-top:16px;">
+    <div class="section-title"><h2>Investment Guidance</h2><span class="tag">Educational</span></div>
+    <div class="analysis-callout">This section translates the dashboard inputs into research guidance. It is not personalized financial advice; use it to identify what deserves more due diligence, what may need risk controls, and where portfolio assumptions may be stretched.</div>
+    <div id="investmentAdvice" class="interpretation-grid" style="margin-top:12px;"></div>
+  </section>
   <section class="card" style="margin-top:16px;"><div class="section-title"><h2>Recommendation Summary</h2><span class="tag">Model Output</span></div><div id="recommendations"></div></section>
 
   <div class="footer-note">Investment markets involve risk. This analysis is educational in nature and should not be considered personalized financial advice. Past performance does not guarantee future results.</div>
@@ -386,7 +391,7 @@ function recalculate(){
   document.getElementById("portfolioRisk").textContent=riskLabel(risk);
   document.getElementById("diversification").textContent=div>=75?"Strong":div>=55?"Moderate":"Concentrated";
   document.getElementById("expectedReturn").textContent=exp.toFixed(1)+"%";
-  renderScenario(score,exp); renderTickerInterpretations(); renderRiskReturnInterpretation(); renderRecommendations();
+  renderScenario(score,exp); renderTickerInterpretations(); renderRiskReturnInterpretation(); renderInvestmentAdvice(); renderRecommendations();
   drawBarChart(); drawScatter(); drawLine(); drawPie();
 }
 function renderScenario(score,exp){
@@ -400,6 +405,85 @@ function renderScenario(score,exp){
     <div><span class="tag">Bear ${bear.toFixed(0)}%</span><p class="small">Risks: valuation compression, recession, higher rates, liquidity shocks. Downside case: <b>${bearRet.toFixed(1)}%</b></p></div>
     </div><div class="small">Scenario-weighted expected return: <b>${weighted.toFixed(1)}%</b>. Confidence level: <b>${score>=75?"Moderate-High":score>=60?"Moderate":"Low-Moderate"}</b>.</div>`;
 }
+
+function renderInvestmentAdvice(){
+  const el=document.getElementById("investmentAdvice"); if(!el)return;
+  if(!assets.length){el.innerHTML=`<div class="interpretation-card"><h3>No guidance available</h3><p>Add one or more tickers to generate educational portfolio guidance.</p></div>`;return}
+
+  const totalAlloc=assets.reduce((s,a)=>s+Number(a.allocation||0),0)||1;
+  const sorted=[...assets].map(a=>({...a,score:finalScore(a),allocShare:Number(a.allocation||0)/totalAlloc*100})).sort((a,b)=>b.score-a.score);
+  const strongest=sorted[0];
+  const weakest=sorted[sorted.length-1];
+  const concentrated=sorted.filter(a=>a.allocShare>=30);
+  const highRisk=sorted.filter(a=>a.risk<55);
+  const expensive=sorted.filter(a=>a.valuation<55);
+  const attractive=sorted.filter(a=>a.score>=70);
+  const speculative=sorted.filter(a=>a.score<60);
+  const avgScore=portfolioWeighted(finalScore);
+  const avgRisk=portfolioWeighted(a=>a.risk);
+  const avgReturn=portfolioWeighted(a=>a.expectedReturn);
+  const div=concentrationScore();
+  const reg=regressionStats();
+
+  let portfolioTone="balanced";
+  if(avgScore>=75 && avgRisk>=65) portfolioTone="higher-quality and comparatively controlled";
+  else if(avgScore>=70 && avgRisk<60) portfolioTone="return-oriented but risk-sensitive";
+  else if(avgScore<60) portfolioTone="speculative or under-supported";
+  else if(avgRisk>=70 && avgReturn<6) portfolioTone="defensive but lower-return";
+
+  let fitNote="Add more tickers with varied risk scores to evaluate risk-adjusted opportunity.";
+  if(reg){
+    const above=reg.predictions.filter(p=>p.resid>0).sort((a,b)=>b.resid-a.resid).slice(0,3).map(p=>p.t);
+    const below=reg.predictions.filter(p=>p.resid<0).sort((a,b)=>a.resid-b.resid).slice(0,3).map(p=>p.t);
+    fitNote=`Best-fit review: ${above.length?above.join(", "):"No tickers"} sit above the risk/return line and may deserve closer research. ${below.length?below.join(", "):"No tickers"} sit below the line and may need stronger justification or lower expected-return assumptions.`;
+  }
+
+  const allocationNote=concentrated.length
+    ? `Concentration check: ${concentrated.map(a=>`${a.ticker} (${a.allocShare.toFixed(1)}%)`).join(", ")} represent large weights. Review whether the position sizes match your risk tolerance and conviction.`
+    : `Concentration check: no single holding is above 30% of the entered allocation. Diversification appears ${div>=75?"strong":div>=55?"moderate":"limited"} by position size.`;
+
+  const riskNote=highRisk.length
+    ? `Risk control: ${highRisk.map(a=>a.ticker).join(", ")} have risk scores below 55. For these, consider smaller position sizing, clearer exit criteria, or additional research before increasing exposure.`
+    : `Risk control: no holding currently has a risk score below 55, but valuation, macro, and liquidity risks should still be monitored.`;
+
+  const valuationNote=expensive.length
+    ? `Valuation discipline: ${expensive.map(a=>a.ticker).join(", ")} have valuation scores below 55. Upside assumptions should be stress-tested because stretched valuation can reduce forward returns.`
+    : `Valuation discipline: valuation scores are not flashing broad weakness under the current assumptions. Continue checking whether price gains are supported by fundamentals.`;
+
+  const actionRows=sorted.map(a=>{
+    let guidance="Monitor";
+    let reason="Mixed score profile; wait for stronger confirmation from trend, valuation, or fundamentals.";
+    if(a.score>=80 && a.risk>=60){guidance="Research priority"; reason="High composite score with acceptable risk score. Review valuation and thesis durability before increasing exposure."}
+    else if(a.score>=70){guidance="Constructive watchlist"; reason="Attractive model score. Confirm that price momentum, fundamentals, and valuation still support the thesis."}
+    else if(a.score>=60){guidance="Hold / reassess"; reason="Neutral model score. Improvement is needed in trend, valuation, fundamentals, or sentiment."}
+    else if(a.score>=50){guidance="Speculative"; reason="Score profile is weak. Position size should remain conservative unless the thesis is very strong."}
+    else {guidance="Avoid / reduce research priority"; reason="High-risk model output. The dashboard assumptions do not currently support a favorable profile."}
+    return `<tr><td>${a.ticker}</td><td>${guidance}</td><td>${a.score.toFixed(1)}</td><td>${riskLabel(a.risk)}</td><td>${reason}</td></tr>`;
+  }).join("");
+
+  el.innerHTML=`
+    <div class="interpretation-card">
+      <h3>Portfolio Read</h3>
+      <p>The portfolio currently screens as <b>${portfolioTone}</b>. Portfolio quality is <b>${avgScore.toFixed(1)}</b>, average expected return is <b>${avgReturn.toFixed(1)}%</b>, and portfolio risk rating is <b>${riskLabel(avgRisk)}</b>.</p>
+      <p>${allocationNote}</p>
+    </div>
+    <div class="interpretation-card">
+      <h3>Risk & Valuation Guidance</h3>
+      <p>${riskNote}</p>
+      <p>${valuationNote}</p>
+    </div>
+    <div class="interpretation-card">
+      <h3>Opportunity Review</h3>
+      <p>Strongest current score: <b>${strongest.ticker}</b> at <b>${strongest.score.toFixed(1)}</b>. Weakest current score: <b>${weakest.ticker}</b> at <b>${weakest.score.toFixed(1)}</b>.</p>
+      <p>${fitNote}</p>
+      <p>${attractive.length?`Attractive-or-better tickers: <b>${attractive.map(a=>a.ticker).join(", ")}</b>.`:"No ticker currently scores 70 or higher."} ${speculative.length?`Speculative/high-risk tickers: <b>${speculative.map(a=>a.ticker).join(", ")}</b>.`:"No ticker currently scores below 60."}</p>
+    </div>
+    <div class="interpretation-card" style="grid-column:1/-1;">
+      <h3>Suggested Research Actions</h3>
+      <table><thead><tr><th>Ticker</th><th>Guidance</th><th>Score</th><th>Risk Level</th><th>Reason</th></tr></thead><tbody>${actionRows}</tbody></table>
+    </div>`;
+}
+
 function renderRecommendations(){
   const el=document.getElementById("recommendations"); if(!el)return;
   const rows=assets.map(a=>{const s=finalScore(a);const thesis=s>=70?"Favorable score profile; monitor valuation and downside risk.":s>=60?"Neutral profile; requires stronger trend, fundamentals, or valuation support.":"Higher-risk profile; position sizing and risk controls are important.";return `<tr><td>${a.ticker}</td><td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td><td>${classification(s)}</td><td>${riskLabel(a.risk)}</td><td>${thesis}</td></tr>`}).join("");
@@ -441,3 +525,4 @@ function startPriceAutoRefresh(){if(refreshTimer)clearInterval(refreshTimer); re
 document.addEventListener("DOMContentLoaded",()=>{hydrateYahooProxyInput(); recalculate(); refreshAllPrices(true); startPriceAutoRefresh()});
 </script>
 </body>
+</html>
