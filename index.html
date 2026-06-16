@@ -3,277 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Investment Trend Analyzer Dashboard</title>
+  <title>Portfolio Research Dashboard</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --panel2: #1f2937;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --line: #374151;
-      --good: #22c55e;
-      --mid: #f59e0b;
-      --bad: #ef4444;
-      --accent: #60a5fa;
-      --purple: #a78bfa;
-      --cyan: #22d3ee;
+      --bg:#f3f6fb; --panel:#ffffff; --text:#172033; --muted:#65748b; --line:#dbe3ef;
+      --accent:#1d4ed8; --accent2:#2563eb; --good:#16a34a; --mid:#d97706; --bad:#dc2626;
+      --soft:#f8fafc; --shadow:0 10px 24px rgba(15,23,42,.08);
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #172554 0, #0f172a 38%, #020617 100%);
-      color: var(--text);
-    }
-    header {
-      padding: 28px 32px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: rgba(15, 23, 42, 0.84);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(12px);
-    }
-    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
-    .subtitle { color: var(--muted); margin-top: 6px; }
-    main { padding: 24px 32px 48px; max-width: 1500px; margin: auto; }
-    .grid { display: grid; gap: 18px; }
-    .top-grid { grid-template-columns: repeat(4, minmax(180px, 1fr)); }
-    .two-grid { grid-template-columns: 1.3fr 1fr; }
-    .three-grid { grid-template-columns: repeat(3, 1fr); }
-    .card {
-      background: rgba(17, 24, 39, 0.88);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
-    }
-    .metric-label { color: var(--muted); font-size: 13px; }
-    .metric-value { font-size: 30px; font-weight: 750; margin-top: 6px; }
-    .tag {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 9px; border-radius: 999px;
-      background: rgba(96,165,250,0.14); color: #bfdbfe; font-size: 12px;
-    }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    button {
-      border: 0; border-radius: 10px; padding: 10px 13px;
-      background: var(--accent); color: #06111f; font-weight: 700;
-      cursor: pointer;
-    }
-    button.secondary { background: #334155; color: var(--text); }
-    button.danger { background: #7f1d1d; color: #fee2e2; }
-    input, select, textarea {
-      background: #020617;
-      color: var(--text);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 9px 10px;
-      outline: none;
-      min-width: 70px;
-    }
-    textarea { width: 100%; min-height: 96px; resize: vertical; }
-    table { width: 100%; border-collapse: collapse; overflow: hidden; }
-    th, td {
-      text-align: left; padding: 10px 9px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      font-size: 13px;
-      vertical-align: middle;
-    }
-    th { color: #cbd5e1; font-weight: 700; background: rgba(255,255,255,0.03); }
-    td input { width: 74px; }
-    td input.ticker { width: 90px; text-transform: uppercase; }
-    .score-pill {
-      display: inline-block; min-width: 52px; text-align: center;
-      padding: 5px 8px; border-radius: 999px; font-weight: 800;
-      color: #06111f;
-    }
-    .good { background: var(--good); }
-    .mid { background: var(--mid); }
-    .bad { background: var(--bad); color: #fff; }
-    .chart { width: 100%; min-height: 285px; }
-    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-    h2 { font-size: 17px; margin: 0; }
-    .small { font-size: 12px; color: var(--muted); }
-    .bar-wrap { height: 10px; background: #020617; border-radius: 999px; overflow: hidden; }
-    .bar { height: 100%; border-radius: 999px; }
-    .warning {
-      border: 1px solid rgba(245,158,11,0.35);
-      background: rgba(245,158,11,0.10);
-      color: #fde68a;
-      border-radius: 14px;
-      padding: 12px;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    .footer-note {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 22px;
-      line-height: 1.45;
-    }
-    @media (max-width: 1000px) {
-      .top-grid, .two-grid, .three-grid { grid-template-columns: 1fr; }
-      main { padding: 18px; }
-      header { padding: 22px 18px; }
-      table { display: block; overflow-x: auto; }
-    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    header{background:#0f172a;color:#fff;padding:22px 32px;border-bottom:1px solid rgba(255,255,255,.12)}
+    h1{margin:0;font-size:25px;letter-spacing:-.02em}
+    .subtitle{color:#cbd5e1;margin-top:6px;font-size:14px}
+    main{padding:22px 32px 44px;max-width:1500px;margin:auto}
+    .grid{display:grid;gap:16px}.top-grid{grid-template-columns:repeat(4,minmax(170px,1fr))}.two-grid{grid-template-columns:1.25fr 1fr}.three-grid{grid-template-columns:repeat(3,1fr)}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    h2{font-size:17px;margin:0}.metric-label{color:var(--muted);font-size:13px}.metric-value{font-size:30px;font-weight:800;margin-top:4px}
+    .small{font-size:12px;color:var(--muted)}.tag{display:inline-flex;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700}
+    .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+    button{border:0;border-radius:9px;padding:9px 12px;background:var(--accent);color:#fff;font-weight:750;cursor:pointer}
+    button.secondary{background:#e2e8f0;color:#172033}button.danger{background:#b91c1c;color:#fff}
+    button:hover{filter:brightness(.98)}
+    input,select,textarea{background:#fff;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:8px 9px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    textarea{width:100%;min-height:92px;resize:vertical}
+    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid #e8eef7;font-size:13px;vertical-align:middle}th{background:#f8fafc;color:#334155;font-weight:800;position:sticky;top:0}
+    td input{width:72px}.ticker-combo{width:108px;text-transform:uppercase}.price-cell{font-weight:800}.day-pos{color:var(--good);font-weight:800}.day-neg{color:var(--bad);font-weight:800}.day-flat{color:var(--muted);font-weight:800}
+    .score-pill{display:inline-block;min-width:52px;text-align:center;padding:5px 8px;border-radius:999px;font-weight:850;color:#fff}.good{background:var(--good)}.mid{background:var(--mid)}.bad{background:var(--bad)}
+    .warning,.analysis-callout{border:1px solid #fde68a;background:#fffbeb;color:#78350f;border-radius:12px;padding:11px;font-size:13px;line-height:1.45}
+    .status{border:1px solid var(--line);background:#f8fafc;color:#475569;border-radius:10px;padding:9px 10px;font-size:12px;margin-top:10px}.status-good{border-color:#bbf7d0;background:#f0fdf4;color:#166534}.status-warn{border-color:#fde68a;background:#fffbeb;color:#92400e}.status-bad{border-color:#fecaca;background:#fef2f2;color:#991b1b}
+    .chart{width:100%;min-height:285px;background:#fff;border-radius:10px}
+    .compact-guide-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.compact-guide-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px}.compact-guide-card h3{font-size:13px;margin:0 0 5px}.compact-guide-card p{font-size:12px;color:#64748b;margin:0;line-height:1.35}
+    details.guide-details{border:1px solid #e2e8f0;border-radius:10px;background:#fff;margin-top:8px;padding:8px 10px}summary{cursor:pointer;font-weight:800;font-size:13px}.help-list{margin:8px 0 0 18px;color:#475569;font-size:12px;line-height:1.55}.inline-note{color:#475569;font-size:12px;line-height:1.5}
+    .interpretation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}.interpretation-card{border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:13px}.interpretation-card h3{margin:0 0 8px;font-size:15px}.interpretation-card p{margin:5px 0;color:#475569;font-size:13px;line-height:1.45}.mini-stat-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.mini-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 7px;font-size:12px;font-weight:750;color:#334155}
+    .footer-note{color:#64748b;font-size:12px;margin-top:22px;line-height:1.45;border-top:1px solid #e2e8f0;padding-top:16px}
+    @media(max-width:1000px){.top-grid,.two-grid,.three-grid,.compact-guide-grid{grid-template-columns:1fr}main{padding:16px}header{padding:20px 16px}table{display:block;overflow-x:auto}}
   </style>
 </head>
 <body>
 <header>
-  <h1>Investment Trend Analyzer Dashboard</h1>
-  <div class="subtitle">Interactive scoring dashboard for trend, fundamental, valuation, risk, sentiment, macro, and scenario analysis.</div>
+  <h1>Portfolio Research Dashboard</h1>
+  <div class="subtitle">Market data, portfolio scoring, scenarios, and allocation review in one workspace.</div>
 </header>
 
 <main>
-  <div class="grid top-grid">
-    <div class="card">
-      <div class="metric-label">Portfolio Quality Score</div>
-      <div id="portfolioScore" class="metric-value">—</div>
-      <div class="small">Weighted by allocation</div>
+  <section class="card">
+    <div class="section-title"><h2>Dashboard Help & Field Guide</h2><span class="tag">Quick Reference</span></div>
+    <div class="analysis-callout">Yahoo updates Live Price and Day Move. Trend, Fundamentals, Valuation, Risk, Sentiment, Macro, and Expected Return are research assumptions that the user can edit.</div>
+    <div class="compact-guide-grid">
+      <div class="compact-guide-card"><h3>Portfolio Quality</h3><p>Allocation-weighted confidence score across holdings.</p></div>
+      <div class="compact-guide-card"><h3>Risk Rating</h3><p>Higher risk score means lower perceived risk.</p></div>
+      <div class="compact-guide-card"><h3>Diversification</h3><p>Measures concentration across allocations.</p></div>
+      <div class="compact-guide-card"><h3>Expected Return</h3><p>Allocation-weighted return assumption, not a guarantee.</p></div>
     </div>
-    <div class="card">
-      <div class="metric-label">Portfolio Risk Rating</div>
-      <div id="portfolioRisk" class="metric-value">—</div>
-      <div class="small">Lower risk score implies higher risk</div>
-    </div>
-    <div class="card">
-      <div class="metric-label">Diversification Rating</div>
-      <div id="diversification" class="metric-value">—</div>
-      <div class="small">Based on concentration</div>
-    </div>
-    <div class="card">
-      <div class="metric-label">Average Expected Return</div>
-      <div id="expectedReturn" class="metric-value">—</div>
-      <div class="small">Scenario-weighted estimate</div>
-    </div>
+    <details class="guide-details"><summary>Columns, controls, and charts</summary>
+      <ul class="help-list">
+        <li><b>Ticker:</b> Yahoo Finance symbol. Select an existing ticker or type any new symbol.</li>
+        <li><b>Live Price:</b> Latest quote returned from Yahoo-compatible chart routes.</li>
+        <li><b>Day Move:</b> Current price change from Yahoo quote data.</li>
+        <li><b>Allocation %:</b> Portfolio weight. It drives portfolio-level scores and allocation chart.</li>
+        <li><b>Trend:</b> Momentum score from 0–100. Higher means stronger price momentum.</li>
+        <li><b>Fund.:</b> Fundamental quality score covering growth, margins, cash flow, leverage, and moat.</li>
+        <li><b>Valuation:</b> Higher means the asset appears more reasonably valued under the user's assumptions.</li>
+        <li><b>Risk:</b> Higher is better; higher means lower perceived risk.</li>
+        <li><b>Sent.:</b> Market/news/analyst/institutional sentiment score.</li>
+        <li><b>Macro:</b> Interest-rate, inflation, sector, and economic backdrop score.</li>
+        <li><b>Exp. Ret. %:</b> Expected return assumption used in scenario and risk/return analysis.</li>
+        <li><b>Final:</b> 25% Fund. + 20% Trend + 20% Valuation + 15% Sent. + 10% Macro + 10% Risk.</li>
+        <li><b>Risk vs Return:</b> Shows expected return against risk score. The best-fit line interprets whether return assumptions rise or fall with risk.</li>
+      </ul>
+    </details>
+  </section>
+
+  <div class="grid top-grid" style="margin-top:16px;">
+    <div class="card"><div class="metric-label">Portfolio Quality Score</div><div id="portfolioScore" class="metric-value">—</div><div class="small">Weighted by allocation</div></div>
+    <div class="card"><div class="metric-label">Portfolio Risk Rating</div><div id="portfolioRisk" class="metric-value">—</div><div class="small">Higher score = lower risk</div></div>
+    <div class="card"><div class="metric-label">Diversification Rating</div><div id="diversification" class="metric-value">—</div><div class="small">Based on concentration</div></div>
+    <div class="card"><div class="metric-label">Average Expected Return</div><div id="expectedReturn" class="metric-value">—</div><div class="small">Allocation-weighted assumption</div></div>
   </div>
 
-  <div class="grid two-grid" style="margin-top:18px;">
+  <div class="grid two-grid" style="margin-top:16px;">
     <section class="card">
       <div class="section-title">
-        <h2>Investment Dashboard</h2>
+        <h2>Holdings & Scoring</h2>
         <div class="row">
           <button onclick="addRow()">Add Asset</button>
+          <button class="secondary" onclick="refreshAllPrices(true)">Refresh Prices</button>
           <button class="secondary" onclick="normalizeAllocations()">Normalize Allocations</button>
           <button class="danger" onclick="resetDashboard()">Reset</button>
         </div>
       </div>
-      <div class="warning">
-        Enter scores from 0–100. Final score formula: 25% fundamentals, 20% technicals, 20% valuation, 15% sentiment, 10% macro, 10% risk. Risk score is inverted conceptually: higher score means lower risk.
+      <div class="row" style="margin-bottom:10px;">
+        <input id="quickTickerInput" list="tickerList" placeholder="Add any Yahoo ticker, e.g. AAPL" style="min-width:260px;text-transform:uppercase" onkeydown="if(event.key==='Enter') addTickerFromInput()"/>
+        <button onclick="addTickerFromInput()">Add & Fetch</button>
+        <button class="secondary" onclick="testYahooConnection()">Test Yahoo Connection</button>
       </div>
-      <div style="margin-top:14px; overflow-x:auto;">
+      <datalist id="tickerList"></datalist>
+      <div class="warning">Enter scores from 0–100. Final score formula: 25% fundamentals, 20% trend, 20% valuation, 15% sentiment, 10% macro, 10% risk. Risk score is inverted conceptually: higher score means lower risk.</div>
+      <div id="marketDataStatus" class="status">Quotes load automatically when the page opens.</div>
+      <div style="margin-top:12px;overflow-x:auto;">
         <table id="assetTable">
-          <thead>
-            <tr>
-              <th>Ticker</th><th>Allocation %</th><th>Trend</th><th>Fund.</th><th>Valuation</th><th>Risk</th><th>Sent.</th><th>Macro</th><th>Exp. Ret. %</th><th>Final</th><th>Class</th><th></th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th>Ticker</th><th>Live Price</th><th>Day Move</th><th>Status</th><th>Allocation %</th><th>Trend</th><th>Fund.</th><th>Valuation</th><th>Risk</th><th>Sent.</th><th>Macro</th><th>Exp. Ret. %</th><th>Final</th><th>Class</th><th></th>
+          </tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
     <section class="card">
-      <div class="section-title">
-        <h2>Thesis Builder</h2>
-        <span class="tag">Editable</span>
-      </div>
+      <div class="section-title"><h2>Investment Thesis & Scenarios</h2><span class="tag">Editable</span></div>
       <label class="small">Current thesis</label>
-      <textarea id="thesis">Balanced multi-asset dashboard using probability-based scenario scoring. Replace sample scores with verified market and financial data before making decisions.</textarea>
+      <textarea id="thesis">Balanced multi-asset dashboard using probability-based scenario scoring. Replace sample assumptions with verified research inputs before using the output.</textarea>
       <div class="grid three-grid" style="margin-top:12px;">
-        <div>
-          <label class="small">Bull Case %</label>
-          <input id="bullProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/>
-        </div>
-        <div>
-          <label class="small">Base Case %</label>
-          <input id="baseProb" type="number" value="50" min="0" max="100" onchange="recalculate()"/>
-        </div>
-        <div>
-          <label class="small">Bear Case %</label>
-          <input id="bearProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/>
-        </div>
+        <div><label class="small">Bull Case %</label><input id="bullProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/></div>
+        <div><label class="small">Base Case %</label><input id="baseProb" type="number" value="50" min="0" max="100" onchange="recalculate()"/></div>
+        <div><label class="small">Bear Case %</label><input id="bearProb" type="number" value="25" min="0" max="100" onchange="recalculate()"/></div>
       </div>
       <div id="scenarioText" style="margin-top:14px;"></div>
     </section>
   </div>
 
-  <div class="grid two-grid" style="margin-top:18px;">
-    <section class="card">
-      <div class="section-title"><h2>Score Comparison</h2><span class="small">Final score by asset</span></div>
-      <svg id="barChart" class="chart" viewBox="0 0 760 310" role="img"></svg>
-    </section>
-    <section class="card">
-      <div class="section-title"><h2>Risk vs Return</h2><span class="small">Risk score vs expected return</span></div>
-      <svg id="scatterChart" class="chart" viewBox="0 0 640 310" role="img"></svg>
-    </section>
+  <div class="grid two-grid" style="margin-top:16px;">
+    <section class="card"><div class="section-title"><h2>Score Comparison</h2><span class="small">Composite score by asset</span></div><svg id="barChart" class="chart" viewBox="0 0 760 310" role="img"></svg></section>
+    <section class="card"><div class="section-title"><h2>Risk vs Return</h2><span class="small">Risk score, expected return, and best-fit line</span></div><svg id="scatterChart" class="chart" viewBox="0 0 640 310" role="img"></svg><div id="riskReturnInterpretation" class="analysis-callout" style="margin-top:10px;"></div></section>
   </div>
 
-  <div class="grid two-grid" style="margin-top:18px;">
-    <section class="card">
-      <div class="section-title"><h2>Trend Comparison</h2><span class="small">Sample momentum path</span></div>
-      <svg id="lineChart" class="chart" viewBox="0 0 760 310" role="img"></svg>
-    </section>
-    <section class="card">
-      <div class="section-title"><h2>Portfolio Allocation</h2><span class="small">Allocation pie</span></div>
-      <svg id="pieChart" class="chart" viewBox="0 0 640 310" role="img"></svg>
-    </section>
+  <div class="grid two-grid" style="margin-top:16px;">
+    <section class="card"><div class="section-title"><h2>Trend Comparison</h2><span class="small">Sample momentum path</span></div><svg id="lineChart" class="chart" viewBox="0 0 760 310" role="img"></svg></section>
+    <section class="card"><div class="section-title"><h2>Portfolio Allocation</h2><span class="small">Allocation pie</span></div><svg id="pieChart" class="chart" viewBox="0 0 640 310" role="img"></svg></section>
   </div>
 
-  <section class="card" style="margin-top:18px;">
-    <div class="section-title"><h2>Final Recommendation Logic</h2><span class="tag">Automated</span></div>
-    <div id="recommendations"></div>
-  </section>
+  <section class="card" style="margin-top:16px;"><div class="section-title"><h2>Ticker & Price Interpretation</h2><span class="tag">Live + Model Inputs</span></div><div id="tickerInterpretations" class="interpretation-grid"></div></section>
+  <section class="card" style="margin-top:16px;"><div class="section-title"><h2>Recommendation Summary</h2><span class="tag">Model Output</span></div><div id="recommendations"></div></section>
 
-  <div class="footer-note">
-    Investment markets involve risk. This analysis is educational in nature and should not be considered personalized financial advice. Past performance does not guarantee future results.
-  </div>
+  <div class="footer-note">Investment markets involve risk. This analysis is educational in nature and should not be considered personalized financial advice. Past performance does not guarantee future results.</div>
 </main>
 
 <script>
-const weights = { fundamental: .25, trend: .20, valuation: .20, sentiment: .15, macro: .10, risk: .10 };
-
-let assets = [
-  { ticker: "SPY", allocation: 40, trend: 72, fundamental: 78, valuation: 58, risk: 72, sentiment: 68, macro: 64, expectedReturn: 7.0 },
-  { ticker: "QQQ", allocation: 25, trend: 80, fundamental: 76, valuation: 48, risk: 60, sentiment: 74, macro: 62, expectedReturn: 9.5 },
-  { ticker: "TLT", allocation: 20, trend: 55, fundamental: 62, valuation: 66, risk: 68, sentiment: 54, macro: 58, expectedReturn: 5.0 },
-  { ticker: "GLD", allocation: 15, trend: 70, fundamental: 60, valuation: 63, risk: 74, sentiment: 66, macro: 70, expectedReturn: 6.2 }
+const weights = { fundamental:.25, trend:.20, valuation:.20, sentiment:.15, macro:.10, risk:.10 };
+const defaultAssets = [
+  { ticker:"SPY", allocation:40, trend:72, fundamental:78, valuation:58, risk:72, sentiment:68, macro:64, expectedReturn:7.0, price:null, dayMove:null, quoteStatus:"Loading" },
+  { ticker:"QQQ", allocation:25, trend:80, fundamental:76, valuation:48, risk:60, sentiment:74, macro:62, expectedReturn:9.5, price:null, dayMove:null, quoteStatus:"Loading" },
+  { ticker:"TLT", allocation:20, trend:55, fundamental:62, valuation:66, risk:68, sentiment:54, macro:58, expectedReturn:5.0, price:null, dayMove:null, quoteStatus:"Loading" },
+  { ticker:"GLD", allocation:15, trend:70, fundamental:60, valuation:63, risk:74, sentiment:66, macro:70, expectedReturn:6.2, price:null, dayMove:null, quoteStatus:"Loading" }
 ];
+let assets = JSON.parse(JSON.stringify(defaultAssets));
+let tickerUniverse = Array.from(new Set(assets.map(a => a.ticker)));
+let quoteCache = JSON.parse(localStorage.getItem("itaQuoteCache") || "{}");
+let refreshTimer = null;
 
-function clamp(n, min=0, max=100) { return Math.max(min, Math.min(max, Number(n) || 0)); }
-function finalScore(a) {
-  return a.fundamental*weights.fundamental + a.trend*weights.trend + a.valuation*weights.valuation + a.sentiment*weights.sentiment + a.macro*weights.macro + a.risk*weights.risk;
-}
-function classification(score) {
-  if (score >= 90) return "Elite";
-  if (score >= 80) return "Strong Buy Candidate";
-  if (score >= 70) return "Attractive";
-  if (score >= 60) return "Neutral";
-  if (score >= 50) return "Speculative";
-  return "High Risk";
-}
-function riskLabel(score) {
-  if (score >= 75) return "Low";
-  if (score >= 60) return "Moderate";
-  if (score >= 45) return "Elevated";
-  return "High";
-}
-function pillClass(score) {
-  if (score >= 70) return "good";
-  if (score >= 55) return "mid";
-  return "bad";
-}
-function renderTable() {
-  const tbody = document.querySelector("#assetTable tbody");
-  tbody.innerHTML = "";
-  assets.forEach((a, i) => {
-    const s = finalScore(a);
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><input class="ticker" value="${a.ticker}" onchange="updateAsset(${i}, 'ticker', this.value.toUpperCase())"></td>
+function clamp(n,min=0,max=100){return Math.max(min,Math.min(max,Number(n)||0))}
+function normalizeTicker(t){return String(t||"").trim().toUpperCase().replace(/\s+/g,"")}
+function finalScore(a){return a.fundamental*weights.fundamental+a.trend*weights.trend+a.valuation*weights.valuation+a.sentiment*weights.sentiment+a.macro*weights.macro+a.risk*weights.risk}
+function classification(s){if(s>=90)return"Elite";if(s>=80)return"Strong Buy Candidate";if(s>=70)return"Attractive";if(s>=60)return"Neutral";if(s>=50)return"Speculative";return"High Risk"}
+function riskLabel(s){if(s>=75)return"Low";if(s>=60)return"Moderate";if(s>=45)return"Elevated";return"High"}
+function pillClass(s){if(s>=70)return"good";if(s>=55)return"mid";return"bad"}
+function money(v){return Number.isFinite(Number(v)) ? "$"+Number(v).toFixed(2) : "—"}
+function pct(v){return Number.isFinite(Number(v)) ? (Number(v)>=0?"+":"")+Number(v).toFixed(2)+"%" : "—"}
+function updateTickerList(){const dl=document.getElementById("tickerList"); if(!dl)return; dl.innerHTML=tickerUniverse.map(t=>`<option value="${t}"></option>`).join("")}
+function addToUniverse(t){t=normalizeTicker(t); if(t && !tickerUniverse.includes(t)){tickerUniverse.push(t); tickerUniverse.sort(); updateTickerList()}}
+
+function renderTable(){
+  updateTickerList();
+  const tbody=document.querySelector("#assetTable tbody"); if(!tbody)return;
+  tbody.innerHTML="";
+  assets.forEach((a,i)=>{
+    const s=finalScore(a);
+    const dayClass = !Number.isFinite(Number(a.dayMove)) ? "day-flat" : Number(a.dayMove)>0 ? "day-pos" : Number(a.dayMove)<0 ? "day-neg" : "day-flat";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input class="ticker-combo" list="tickerList" value="${a.ticker}" 
+        onchange="updateAsset(${i}, 'ticker', this.value)" 
+        onblur="updateAsset(${i}, 'ticker', this.value)" 
+        onkeydown="if(event.key==='Enter'){this.blur()}"></td>
+      <td class="price-cell">${money(a.price)}</td>
+      <td class="${dayClass}">${pct(a.dayMove)}</td>
+      <td><span class="small">${a.quoteStatus || "—"}</span></td>
       <td><input type="number" value="${a.allocation}" onchange="updateAsset(${i}, 'allocation', this.value)"></td>
       <td><input type="number" value="${a.trend}" min="0" max="100" onchange="updateAsset(${i}, 'trend', this.value)"></td>
       <td><input type="number" value="${a.fundamental}" min="0" max="100" onchange="updateAsset(${i}, 'fundamental', this.value)"></td>
@@ -284,173 +191,169 @@ function renderTable() {
       <td><input type="number" value="${a.expectedReturn}" onchange="updateAsset(${i}, 'expectedReturn', this.value)"></td>
       <td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td>
       <td>${classification(s)}</td>
-      <td><button class="danger" onclick="removeAsset(${i})">×</button></td>
-    `;
+      <td><button class="danger" onclick="removeAsset(${i})">×</button></td>`;
     tbody.appendChild(tr);
   });
 }
-function updateAsset(i, key, value) {
-  if (key === "ticker") assets[i][key] = value || "N/A";
-  else assets[i][key] = key === "expectedReturn" ? Number(value || 0) : clamp(value);
+function updateAsset(i,key,value){
+  if(!assets[i])return;
+  if(key==="ticker"){
+    const t=normalizeTicker(value);
+    if(!t)return;
+    const changed=t!==assets[i].ticker;
+    assets[i].ticker=t; addToUniverse(t);
+    if(changed){assets[i].price=null;assets[i].dayMove=null;assets[i].quoteStatus="Loading";recalculate();fetchPriceForRow(i,true);return}
+  } else if(key==="expectedReturn" || key==="allocation") assets[i][key]=Number(value||0);
+  else assets[i][key]=clamp(value);
   recalculate();
 }
-function addRow() {
-  assets.push({ ticker: "NEW", allocation: 0, trend: 50, fundamental: 50, valuation: 50, risk: 50, sentiment: 50, macro: 50, expectedReturn: 5 });
-  recalculate();
+function addRow(){
+  const t=tickerUniverse[0]||"AAPL";
+  assets.push({ticker:t,allocation:0,trend:50,fundamental:50,valuation:50,risk:50,sentiment:50,macro:50,expectedReturn:5,price:null,dayMove:null,quoteStatus:"Loading"});
+  recalculate(); fetchPriceForRow(assets.length-1,true);
 }
-function removeAsset(i) {
-  assets.splice(i, 1);
-  recalculate();
+function addTickerFromInput(){
+  const input=document.getElementById("quickTickerInput"); const t=normalizeTicker(input?.value);
+  if(!t)return; addToUniverse(t);
+  assets.push({ticker:t,allocation:0,trend:50,fundamental:50,valuation:50,risk:50,sentiment:50,macro:50,expectedReturn:5,price:null,dayMove:null,quoteStatus:"Loading"});
+  if(input)input.value="";
+  recalculate(); fetchPriceForRow(assets.length-1,true);
 }
-function normalizeAllocations() {
-  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0);
-  if (!total) return;
-  assets = assets.map(a => ({ ...a, allocation: +(a.allocation / total * 100).toFixed(2) }));
-  recalculate();
+function removeAsset(i){assets.splice(i,1);recalculate()}
+function normalizeAllocations(){const total=assets.reduce((s,a)=>s+Number(a.allocation||0),0); if(!total)return; assets=assets.map(a=>({...a,allocation:+(a.allocation/total*100).toFixed(2)}));recalculate()}
+function resetDashboard(){assets=JSON.parse(JSON.stringify(defaultAssets)); tickerUniverse=Array.from(new Set(assets.map(a=>a.ticker))); recalculate(); refreshAllPrices(true)}
+
+async function fetchWithTimeout(url, timeout=8500){
+  const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(),timeout);
+  try{const res=await fetch(url,{cache:"no-store",signal:ctrl.signal}); if(!res.ok)throw new Error("HTTP "+res.status); return await res.json()}
+  finally{clearTimeout(timer)}
 }
-function resetDashboard() {
-  assets = [
-    { ticker: "SPY", allocation: 40, trend: 72, fundamental: 78, valuation: 58, risk: 72, sentiment: 68, macro: 64, expectedReturn: 7.0 },
-    { ticker: "QQQ", allocation: 25, trend: 80, fundamental: 76, valuation: 48, risk: 60, sentiment: 74, macro: 62, expectedReturn: 9.5 },
-    { ticker: "TLT", allocation: 20, trend: 55, fundamental: 62, valuation: 66, risk: 68, sentiment: 54, macro: 58, expectedReturn: 5.0 },
-    { ticker: "GLD", allocation: 15, trend: 70, fundamental: 60, valuation: 63, risk: 74, sentiment: 66, macro: 70, expectedReturn: 6.2 }
+function yahooUrls(ticker){
+  const s=encodeURIComponent(ticker), cb=Date.now();
+  const direct=[
+    `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=1m&range=1d&_=${cb}`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${s}?interval=1m&range=1d&_=${cb}`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=5m&range=5d&_=${cb}`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${s}?interval=1d&range=1mo&_=${cb}`
   ];
+  const relays=[
+    ...direct.map(u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`),
+    ...direct.map(u=>`https://corsproxy.io/?${encodeURIComponent(u)}`)
+  ];
+  return [...direct,...relays];
+}
+function parseYahoo(data){
+  const result=data?.chart?.result?.[0]; if(!result)throw new Error("No Yahoo result");
+  const meta=result.meta||{};
+  const quote=result.indicators?.quote?.[0]||{};
+  const closes=(quote.close||[]).filter(v=>Number.isFinite(Number(v)));
+  const price=Number(meta.regularMarketPrice ?? closes[closes.length-1]);
+  const prev=Number(meta.previousClose ?? meta.chartPreviousClose ?? closes[closes.length-2]);
+  if(!Number.isFinite(price))throw new Error("No price");
+  const dayMove = Number.isFinite(prev) && prev!==0 ? ((price-prev)/prev)*100 : null;
+  return {price, dayMove, time:Date.now()};
+}
+async function getQuote(ticker){
+  for(const url of yahooUrls(ticker)){
+    try{return parseYahoo(await fetchWithTimeout(url))}
+    catch(e){}
+  }
+  const cached=quoteCache[ticker];
+  if(cached && Number.isFinite(Number(cached.price))) return {...cached, cached:true};
+  throw new Error("Yahoo unavailable");
+}
+async function fetchPriceForRow(i, manual=false){
+  if(!assets[i])return;
+  const ticker=normalizeTicker(assets[i].ticker); if(!ticker)return;
+  assets[i].quoteStatus="Loading"; renderTable();
+  try{
+    const q=await getQuote(ticker);
+    assets[i].price=q.price; assets[i].dayMove=q.dayMove; assets[i].quoteStatus=q.cached ? "Cached" : "Updated";
+    if(!q.cached){quoteCache[ticker]={price:q.price,dayMove:q.dayMove,time:q.time}; localStorage.setItem("itaQuoteCache",JSON.stringify(quoteCache))}
+    setStatus(`${ticker} quote ${q.cached ? "loaded from cache" : "updated from Yahoo"}.`, q.cached ? "warn" : "good");
+  }catch(e){
+    assets[i].quoteStatus="Yahoo unavailable"; setStatus(`Yahoo quote unavailable for ${ticker}. Check the symbol, browser permissions, or network.`, "bad");
+  }
   recalculate();
 }
-function portfolioWeighted(metricFn) {
-  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
-  return assets.reduce((s,a)=>s + metricFn(a) * (Number(a.allocation||0)/total),0);
+async function refreshAllPrices(manual=false){
+  if(!assets.length)return;
+  setStatus("Refreshing Yahoo quotes…","warn");
+  await Promise.all(assets.map((_,i)=>fetchPriceForRow(i,manual)));
+  setStatus("Quote refresh complete.","good");
 }
-function concentrationScore() {
-  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
-  const hhi = assets.reduce((s,a)=>s+Math.pow((a.allocation||0)/total,2),0);
-  return Math.max(0, Math.min(100, 100 - (hhi * 100 - 20)));
+async function testYahooConnection(){
+  setStatus("Testing Yahoo connection…","warn");
+  try{await getQuote("SPY"); setStatus("Yahoo connection test succeeded.","good")}
+  catch(e){setStatus("Yahoo connection test failed in this browser/network. Cached data may still display when available.","bad")}
 }
-function recalculate() {
+function setStatus(msg,type=""){
+  const el=document.getElementById("marketDataStatus"); if(!el)return;
+  el.className="status"+(type==="good"?" status-good":type==="warn"?" status-warn":type==="bad"?" status-bad":"");
+  el.textContent=msg;
+}
+function portfolioWeighted(fn){const total=assets.reduce((s,a)=>s+Number(a.allocation||0),0)||1;return assets.reduce((s,a)=>s+fn(a)*(Number(a.allocation||0)/total),0)}
+function concentrationScore(){const total=assets.reduce((s,a)=>s+Number(a.allocation||0),0)||1;const hhi=assets.reduce((s,a)=>s+Math.pow((a.allocation||0)/total,2),0);return Math.max(0,Math.min(100,100-(hhi*100-20)))}
+function recalculate(){
   renderTable();
-  const score = portfolioWeighted(finalScore);
-  const risk = portfolioWeighted(a=>a.risk);
-  const exp = portfolioWeighted(a=>a.expectedReturn);
-  const div = concentrationScore();
-  document.getElementById("portfolioScore").textContent = score.toFixed(1);
-  document.getElementById("portfolioRisk").textContent = riskLabel(risk);
-  document.getElementById("diversification").textContent = div >= 75 ? "Strong" : div >= 55 ? "Moderate" : "Concentrated";
-  document.getElementById("expectedReturn").textContent = exp.toFixed(1) + "%";
-  renderScenario(score, exp);
-  renderRecommendations();
-  drawBarChart();
-  drawScatter();
-  drawLine();
-  drawPie();
+  const score=portfolioWeighted(finalScore), risk=portfolioWeighted(a=>a.risk), exp=portfolioWeighted(a=>a.expectedReturn), div=concentrationScore();
+  document.getElementById("portfolioScore").textContent=score.toFixed(1);
+  document.getElementById("portfolioRisk").textContent=riskLabel(risk);
+  document.getElementById("diversification").textContent=div>=75?"Strong":div>=55?"Moderate":"Concentrated";
+  document.getElementById("expectedReturn").textContent=exp.toFixed(1)+"%";
+  renderScenario(score,exp); renderTickerInterpretations(); renderRiskReturnInterpretation(); renderRecommendations();
+  drawBarChart(); drawScatter(); drawLine(); drawPie();
 }
-function renderScenario(score, exp) {
-  let bp = Number(document.getElementById("bullProb").value || 25);
-  let base = Number(document.getElementById("baseProb").value || 50);
-  let bear = Number(document.getElementById("bearProb").value || 25);
-  const total = bp + base + bear || 1;
-  bp = bp / total * 100; base = base / total * 100; bear = bear / total * 100;
-  const bullRet = exp + 6;
-  const baseRet = exp;
-  const bearRet = exp - 10;
-  const weighted = (bullRet*bp + baseRet*base + bearRet*bear)/100;
-  document.getElementById("scenarioText").innerHTML = `
-    <div class="grid three-grid">
-      <div><span class="tag">Bull ${bp.toFixed(0)}%</span><p class="small">Catalysts: earnings growth, margin expansion, favorable macro. Potential return: <b>${bullRet.toFixed(1)}%</b></p></div>
-      <div><span class="tag">Base ${base.toFixed(0)}%</span><p class="small">Most likely path: normalized growth and mixed valuation effects. Expected return: <b>${baseRet.toFixed(1)}%</b></p></div>
-      <div><span class="tag">Bear ${bear.toFixed(0)}%</span><p class="small">Risks: valuation compression, recession, higher rates, liquidity shocks. Downside case: <b>${bearRet.toFixed(1)}%</b></p></div>
-    </div>
-    <div class="small">Scenario-weighted expected return: <b>${weighted.toFixed(1)}%</b>. Confidence level: <b>${score >= 75 ? "Moderate-High" : score >= 60 ? "Moderate" : "Low-Moderate"}</b>.</div>`;
+function renderScenario(score,exp){
+  const el=document.getElementById("scenarioText"); if(!el)return;
+  let bp=Number(document.getElementById("bullProb").value||25), base=Number(document.getElementById("baseProb").value||50), bear=Number(document.getElementById("bearProb").value||25);
+  const total=bp+base+bear||1; bp=bp/total*100;base=base/total*100;bear=bear/total*100;
+  const bullRet=exp+6, baseRet=exp, bearRet=exp-10, weighted=(bullRet*bp+baseRet*base+bearRet*bear)/100;
+  el.innerHTML=`<div class="grid three-grid">
+    <div><span class="tag">Bull ${bp.toFixed(0)}%</span><p class="small">Catalysts: earnings growth, margin expansion, favorable macro. Potential return: <b>${bullRet.toFixed(1)}%</b></p></div>
+    <div><span class="tag">Base ${base.toFixed(0)}%</span><p class="small">Most likely path: normalized growth and mixed valuation effects. Expected return: <b>${baseRet.toFixed(1)}%</b></p></div>
+    <div><span class="tag">Bear ${bear.toFixed(0)}%</span><p class="small">Risks: valuation compression, recession, higher rates, liquidity shocks. Downside case: <b>${bearRet.toFixed(1)}%</b></p></div>
+    </div><div class="small">Scenario-weighted expected return: <b>${weighted.toFixed(1)}%</b>. Confidence level: <b>${score>=75?"Moderate-High":score>=60?"Moderate":"Low-Moderate"}</b>.</div>`;
 }
-function renderRecommendations() {
-  const rows = assets.map(a => {
-    const s = finalScore(a);
-    const thesis = s >= 70 ? "Favorable score profile; monitor valuation and downside risk." :
-                   s >= 60 ? "Neutral profile; requires stronger trend, fundamentals, or valuation support." :
-                   "Higher-risk profile; position sizing and risk controls are important.";
-    return `<tr><td>${a.ticker}</td><td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td><td>${classification(s)}</td><td>${riskLabel(a.risk)}</td><td>${thesis}</td></tr>`;
-  }).join("");
-  document.getElementById("recommendations").innerHTML = `
-    <table><thead><tr><th>Ticker</th><th>Confidence</th><th>Recommendation Class</th><th>Risk Level</th><th>Current Thesis</th></tr></thead><tbody>${rows}</tbody></table>`;
+function renderRecommendations(){
+  const el=document.getElementById("recommendations"); if(!el)return;
+  const rows=assets.map(a=>{const s=finalScore(a);const thesis=s>=70?"Favorable score profile; monitor valuation and downside risk.":s>=60?"Neutral profile; requires stronger trend, fundamentals, or valuation support.":"Higher-risk profile; position sizing and risk controls are important.";return `<tr><td>${a.ticker}</td><td><span class="score-pill ${pillClass(s)}">${s.toFixed(1)}</span></td><td>${classification(s)}</td><td>${riskLabel(a.risk)}</td><td>${thesis}</td></tr>`}).join("");
+  el.innerHTML=`<table><thead><tr><th>Ticker</th><th>Confidence</th><th>Recommendation Class</th><th>Risk Level</th><th>Current Thesis</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-function svg(tag, attrs={}, content="") {
-  const attr = Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ");
-  return `<${tag} ${attr}>${content}</${tag}>`;
+function regressionStats(){
+  if(assets.length<2)return null;
+  const pts=assets.map(a=>({x:Number(a.risk),y:Number(a.expectedReturn),t:a.ticker})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+  if(pts.length<2)return null; const n=pts.length, mx=pts.reduce((s,p)=>s+p.x,0)/n, my=pts.reduce((s,p)=>s+p.y,0)/n;
+  const den=pts.reduce((s,p)=>s+(p.x-mx)**2,0); if(!den)return null;
+  const slope=pts.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0)/den, intercept=my-slope*mx;
+  const predictions=pts.map(p=>({...p,pred:slope*p.x+intercept,resid:p.y-(slope*p.x+intercept)}));
+  return {slope,intercept,predictions};
 }
-function drawBarChart() {
-  const el = document.getElementById("barChart");
-  const w=760,h=310,p=44, max=100;
-  const bw = (w - p*2) / Math.max(assets.length,1) * .62;
-  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
-  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
-  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
-  assets.forEach((a,i)=>{
-    const s=finalScore(a), x=p+i*((w-p*2)/assets.length)+20, y=h-p-(s/max)*(h-p*2);
-    const color=s>=70?"#22c55e":s>=55?"#f59e0b":"#ef4444";
-    out += svg("rect",{x,y,width:bw,height:h-p-y,rx:8,fill:color,opacity:.9});
-    out += svg("text",{x:x+bw/2,y:h-18,fill:"#cbd5e1","font-size":12,"text-anchor":"middle"},a.ticker);
-    out += svg("text",{x:x+bw/2,y:y-8,fill:"#e5e7eb","font-size":12,"text-anchor":"middle"},s.toFixed(0));
-  });
-  el.innerHTML = out;
+function renderRiskReturnInterpretation(){
+  const el=document.getElementById("riskReturnInterpretation"); if(!el)return; const reg=regressionStats();
+  if(!reg){el.textContent="Add at least two tickers with different risk scores to calculate a line of best fit.";return}
+  const dir=reg.slope>.03?"upward":reg.slope<-.03?"downward":"mostly flat";
+  const above=reg.predictions.filter(p=>p.resid>0).map(p=>p.t).join(", ")||"none";
+  const below=reg.predictions.filter(p=>p.resid<0).map(p=>p.t).join(", ")||"none";
+  const meaning=dir==="upward"?"the assumptions imply higher expected return for lower-risk holdings.":dir==="downward"?"the assumptions imply higher expected return is generally being assigned to riskier holdings.":"expected return assumptions are not strongly tied to the risk scores.";
+  el.innerHTML=`The best-fit line is <b>${dir}</b>, which means ${meaning} Tickers above the line have better expected return versus their risk score: <b>${above}</b>. Tickers below the line have weaker expected return versus their risk score: <b>${below}</b>.`;
 }
-function drawScatter() {
-  const el = document.getElementById("scatterChart");
-  const w=640,h=310,p=46;
-  const returns = assets.map(a=>a.expectedReturn);
-  const minR = Math.min(-10, ...returns)-1, maxR = Math.max(15, ...returns)+1;
-  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
-  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
-  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
-  out += svg("text",{x:w/2,y:h-8,fill:"#94a3b8","font-size":12,"text-anchor":"middle"},"Risk score: higher = lower risk");
-  out += svg("text",{x:15,y:h/2,fill:"#94a3b8","font-size":12,transform:`rotate(-90 15 ${h/2})`},"Expected return");
-  assets.forEach(a=>{
-    const x=p+(a.risk/100)*(w-p*2);
-    const y=h-p-((a.expectedReturn-minR)/(maxR-minR))*(h-p*2);
-    out += svg("circle",{cx:x,cy:y,r:10,fill:"#60a5fa",opacity:.9});
-    out += svg("text",{x:x+13,y:y+4,fill:"#e5e7eb","font-size":12},a.ticker);
-  });
-  el.innerHTML = out;
+function renderTickerInterpretations(){
+  const el=document.getElementById("tickerInterpretations"); if(!el)return;
+  if(!assets.length){el.innerHTML=`<div class="interpretation-card"><h3>No tickers added</h3><p>Add a ticker to generate an interpretation.</p></div>`;return}
+  el.innerHTML=assets.map(a=>{const s=finalScore(a); const move=Number(a.dayMove); const priceText=Number.isFinite(Number(a.price))?`Latest Yahoo price is ${money(a.price)}.`:`No current Yahoo price is available.`;
+    const moveText=Number.isFinite(move)?`Day move is ${pct(move)}, which is ${move>0?"positive":move<0?"negative":"flat"} for the session.`:"Day move is unavailable.";
+    const rr=a.expectedReturn>=8&&a.risk>=65?"favorable risk/return balance":a.expectedReturn>=8&&a.risk<60?"higher-return but higher-risk profile":a.expectedReturn<6&&a.risk>=65?"defensive but lower-return profile":"balanced or mixed risk/return profile";
+    return `<div class="interpretation-card"><h3>${a.ticker}</h3><p>${priceText} ${moveText}</p><p>Risk level is <b>${riskLabel(a.risk)}</b>, expected return assumption is <b>${Number(a.expectedReturn||0).toFixed(1)}%</b>, and final score is <b>${s.toFixed(1)}</b> (${classification(s)}).</p><p>This ticker currently reads as a <b>${rr}</b> under the dashboard assumptions.</p><div class="mini-stat-row"><span class="mini-stat">Price: ${money(a.price)}</span><span class="mini-stat">Day: ${pct(a.dayMove)}</span><span class="mini-stat">Risk: ${a.risk}</span><span class="mini-stat">Score: ${s.toFixed(1)}</span></div></div>`}).join("");
 }
-function drawLine() {
-  const el = document.getElementById("lineChart");
-  const w=760,h=310,p=44;
-  let out = svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});
-  out += svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#475569"});
-  out += svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#475569"});
-  const labels=["1M","3M","6M","1Y","Now"];
-  labels.forEach((l,i)=>out += svg("text",{x:p+i*(w-p*2)/4,y:h-18,fill:"#94a3b8","font-size":11,"text-anchor":"middle"},l));
-  const colors=["#60a5fa","#22d3ee","#a78bfa","#f59e0b","#22c55e","#ef4444"];
-  assets.forEach((a,idx)=>{
-    const base = a.trend;
-    const vals=[base-12+idx*2, base-7, base-4+idx, base-2, base].map(v=>Math.max(5,Math.min(95,v)));
-    const pts=vals.map((v,i)=>[p+i*(w-p*2)/4, h-p-(v/100)*(h-p*2)]);
-    out += svg("polyline",{points:pts.map(pt=>pt.join(",")).join(" "),fill:"none",stroke:colors[idx%colors.length],"stroke-width":3,opacity:.9});
-    const last=pts[pts.length-1];
-    out += svg("text",{x:last[0]+8,y:last[1]+4,fill:colors[idx%colors.length],"font-size":12},a.ticker);
-  });
-  el.innerHTML = out;
-}
-function drawPie() {
-  const el = document.getElementById("pieChart");
-  const w=640,h=310,cx=180,cy=155,r=105;
-  const total = assets.reduce((s,a)=>s+Number(a.allocation||0),0) || 1;
-  const colors=["#60a5fa","#22d3ee","#a78bfa","#f59e0b","#22c55e","#ef4444","#94a3b8"];
-  let angle=-Math.PI/2, out="";
-  assets.forEach((a,i)=>{
-    const slice = (a.allocation/total) * Math.PI*2;
-    const x1=cx+Math.cos(angle)*r, y1=cy+Math.sin(angle)*r;
-    const x2=cx+Math.cos(angle+slice)*r, y2=cy+Math.sin(angle+slice)*r;
-    const large = slice > Math.PI ? 1 : 0;
-    out += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${colors[i%colors.length]}" opacity=".92"></path>`;
-    angle += slice;
-  });
-  assets.forEach((a,i)=>{
-    const y=65+i*28;
-    out += svg("rect",{x:340,y:y-12,width:14,height:14,rx:3,fill:colors[i%colors.length]});
-    out += svg("text",{x:362,y,fill:"#e5e7eb","font-size":13},`${a.ticker}: ${Number(a.allocation||0).toFixed(1)}%`);
-  });
-  el.innerHTML = out;
-}
-recalculate();
+function svg(tag,attrs={},content=""){const attr=Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ");return `<${tag} ${attr}>${content}</${tag}>`}
+function drawBarChart(){const el=document.getElementById("barChart"); if(!el)return; const w=760,h=310,p=44,max=100,bw=(w-p*2)/Math.max(assets.length,1)*.62;let out=svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});out+=svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#94a3b8"});out+=svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#94a3b8"});assets.forEach((a,i)=>{const s=finalScore(a),x=p+i*((w-p*2)/assets.length)+18,y=h-p-(s/max)*(h-p*2),color=s>=70?"#16a34a":s>=55?"#d97706":"#dc2626";out+=svg("rect",{x,y,width:bw,height:h-p-y,rx:7,fill:color,opacity:.92});out+=svg("text",{x:x+bw/2,y:h-18,fill:"#334155","font-size":12,"text-anchor":"middle"},a.ticker);out+=svg("text",{x:x+bw/2,y:y-8,fill:"#172033","font-size":12,"font-weight":700,"text-anchor":"middle"},s.toFixed(0))});el.innerHTML=out}
+function drawScatter(){const el=document.getElementById("scatterChart"); if(!el)return; const w=640,h=310,p=46;const returns=assets.map(a=>Number(a.expectedReturn));const minR=Math.min(-10,...returns)-1,maxR=Math.max(15,...returns)+1;let out=svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});out+=svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#94a3b8"});out+=svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#94a3b8"});const reg=regressionStats();if(reg){const xA=0,xB=100,yA=reg.slope*xA+reg.intercept,yB=reg.slope*xB+reg.intercept;const sxA=p+(xA/100)*(w-p*2),sxB=p+(xB/100)*(w-p*2),syA=h-p-((yA-minR)/(maxR-minR))*(h-p*2),syB=h-p-((yB-minR)/(maxR-minR))*(h-p*2);out+=svg("line",{x1:sxA,y1:syA,x2:sxB,y2:syB,stroke:"#111827","stroke-width":2,"stroke-dasharray":"6 5",opacity:.75})}out+=svg("text",{x:w/2,y:h-8,fill:"#64748b","font-size":12,"text-anchor":"middle"},"Risk score: higher = lower risk");assets.forEach(a=>{const x=p+(a.risk/100)*(w-p*2),y=h-p-((a.expectedReturn-minR)/(maxR-minR))*(h-p*2);out+=svg("circle",{cx:x,cy:y,r:9,fill:"#2563eb",opacity:.9});out+=svg("text",{x:x+12,y:y+4,fill:"#172033","font-size":12},a.ticker)});el.innerHTML=out}
+function drawLine(){const el=document.getElementById("lineChart"); if(!el)return; const w=760,h=310,p=44;let out=svg("rect",{x:0,y:0,width:w,height:h,fill:"transparent"});out+=svg("line",{x1:p,y1:h-p,x2:w-p,y2:h-p,stroke:"#94a3b8"});out+=svg("line",{x1:p,y1:p,x2:p,y2:h-p,stroke:"#94a3b8"});["1M","3M","6M","1Y","Now"].forEach((l,i)=>out+=svg("text",{x:p+i*(w-p*2)/4,y:h-18,fill:"#64748b","font-size":11,"text-anchor":"middle"},l));const colors=["#2563eb","#0891b2","#7c3aed","#d97706","#16a34a","#dc2626"];assets.forEach((a,idx)=>{const base=a.trend;const vals=[base-12+idx*2,base-7,base-4+idx,base-2,base].map(v=>Math.max(5,Math.min(95,v)));const pts=vals.map((v,i)=>[p+i*(w-p*2)/4,h-p-(v/100)*(h-p*2)]);out+=svg("polyline",{points:pts.map(pt=>pt.join(",")).join(" "),fill:"none",stroke:colors[idx%colors.length],"stroke-width":3,opacity:.9});const last=pts[pts.length-1];out+=svg("text",{x:last[0]+8,y:last[1]+4,fill:colors[idx%colors.length],"font-size":12},a.ticker)});el.innerHTML=out}
+function drawPie(){const el=document.getElementById("pieChart"); if(!el)return; const w=640,h=310,cx=180,cy=155,r=105,total=assets.reduce((s,a)=>s+Number(a.allocation||0),0)||1,colors=["#2563eb","#0891b2","#7c3aed","#d97706","#16a34a","#dc2626","#64748b"];let angle=-Math.PI/2,out="";assets.forEach((a,i)=>{const slice=(a.allocation/total)*Math.PI*2,x1=cx+Math.cos(angle)*r,y1=cy+Math.sin(angle)*r,x2=cx+Math.cos(angle+slice)*r,y2=cy+Math.sin(angle+slice)*r,large=slice>Math.PI?1:0;out+=`<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${colors[i%colors.length]}" opacity=".92"></path>`;angle+=slice});assets.forEach((a,i)=>{const y=65+i*28;out+=svg("rect",{x:340,y:y-12,width:14,height:14,rx:3,fill:colors[i%colors.length]});out+=svg("text",{x:362,y,fill:"#172033","font-size":13},`${a.ticker}: ${Number(a.allocation||0).toFixed(1)}%`)});el.innerHTML=out}
+
+function startPriceAutoRefresh(){if(refreshTimer)clearInterval(refreshTimer); refreshTimer=setInterval(()=>refreshAllPrices(false),60000)}
+document.addEventListener("DOMContentLoaded",()=>{recalculate(); refreshAllPrices(true); startPriceAutoRefresh()});
 </script>
 </body>
 </html>
