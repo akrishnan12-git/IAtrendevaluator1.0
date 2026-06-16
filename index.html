@@ -99,9 +99,18 @@
         <button onclick="addTickerFromInput()">Add & Fetch</button>
         <button class="secondary" onclick="testYahooConnection()">Test Yahoo Connection</button>
       </div>
+      <div class="row" style="margin-bottom:10px;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:360px;max-width:620px;flex:1;">
+          <label class="small" for="yahooProxyInput">Optional private Yahoo proxy endpoint</label>
+          <input id="yahooProxyInput" placeholder="Optional: https://your-project.vercel.app/api/yahoo?symbol=" style="width:100%;min-width:320px;" />
+          <span class="small">Leave blank for single-file mode. The dashboard will try direct Yahoo first, then built-in browser relay fallbacks. A private proxy is still the most reliable hosted option.</span>
+        </div>
+        <button class="secondary" onclick="saveYahooProxy()">Save Proxy</button>
+        <button class="secondary" onclick="clearYahooProxy()">Use Direct Yahoo</button>
+      </div>
       <datalist id="tickerList"></datalist>
       <div class="warning">Enter scores from 0–100. Final score formula: 25% fundamentals, 20% trend, 20% valuation, 15% sentiment, 10% macro, 10% risk. Risk score is inverted conceptually: higher score means lower risk.</div>
-      <div id="marketDataStatus" class="status">Quotes load automatically when the page opens.</div>
+      <div id="marketDataStatus" class="status">Quotes load automatically when the page opens. In single-file mode, the dashboard tries direct Yahoo and built-in relay fallbacks.</div>
       <div style="margin-top:12px;overflow-x:auto;">
         <table id="assetTable">
           <thead><tr>
@@ -152,10 +161,47 @@ const defaultAssets = [
 let assets = JSON.parse(JSON.stringify(defaultAssets));
 let tickerUniverse = Array.from(new Set(assets.map(a => a.ticker)));
 let quoteCache = JSON.parse(localStorage.getItem("itaQuoteCache") || "{}");
+let yahooProxyBase = localStorage.getItem("itaYahooProxyBase") || "";
 let refreshTimer = null;
 
 function clamp(n,min=0,max=100){return Math.max(min,Math.min(max,Number(n)||0))}
 function normalizeTicker(t){return String(t||"").trim().toUpperCase().replace(/\s+/g,"")}
+function normalizeProxyUrl(url){
+  let u = String(url || "").trim();
+  if(!u) return "";
+  // The dashboard accepts either:
+  // 1) https://your-site/api/yahoo?symbol=
+  // 2) https://your-site/api/yahoo
+  // 3) https://your-site/api/yahoo?symbol=AAPL
+  try{
+    const probe = new URL(u);
+    probe.searchParams.delete("symbol");
+    const qs = probe.search ? probe.search + "&symbol=" : "?symbol=";
+    return probe.origin + probe.pathname + qs;
+  }catch(e){
+    return u.includes("symbol=") ? u.split("symbol=")[0] + "symbol=" : u.replace(/\?$/,"") + "?symbol=";
+  }
+}
+function saveYahooProxy(){
+  const input=document.getElementById("yahooProxyInput");
+  yahooProxyBase = normalizeProxyUrl(input?.value);
+  if(!yahooProxyBase){setStatus("Proxy URL is empty. Direct Yahoo mode is active.","warn");return}
+  localStorage.setItem("itaYahooProxyBase", yahooProxyBase);
+  if(input) input.value = yahooProxyBase;
+  setStatus("Yahoo proxy saved. Testing connection…","warn");
+  testYahooConnection();
+}
+function clearYahooProxy(){
+  yahooProxyBase = "";
+  localStorage.removeItem("itaYahooProxyBase");
+  const input=document.getElementById("yahooProxyInput");
+  if(input) input.value = "";
+  setStatus("Proxy removed. Direct Yahoo mode is active, which may fail on GitHub Pages.","warn");
+}
+function hydrateYahooProxyInput(){
+  const input=document.getElementById("yahooProxyInput");
+  if(input) input.value = yahooProxyBase;
+}
 function finalScore(a){return a.fundamental*weights.fundamental+a.trend*weights.trend+a.valuation*weights.valuation+a.sentiment*weights.sentiment+a.macro*weights.macro+a.risk*weights.risk}
 function classification(s){if(s>=90)return"Elite";if(s>=80)return"Strong Buy Candidate";if(s>=70)return"Attractive";if(s>=60)return"Neutral";if(s>=50)return"Speculative";return"High Risk"}
 function riskLabel(s){if(s>=75)return"Low";if(s>=60)return"Moderate";if(s>=45)return"Elevated";return"High"}
@@ -223,24 +269,62 @@ function removeAsset(i){assets.splice(i,1);recalculate()}
 function normalizeAllocations(){const total=assets.reduce((s,a)=>s+Number(a.allocation||0),0); if(!total)return; assets=assets.map(a=>({...a,allocation:+(a.allocation/total*100).toFixed(2)}));recalculate()}
 function resetDashboard(){assets=JSON.parse(JSON.stringify(defaultAssets)); tickerUniverse=Array.from(new Set(assets.map(a=>a.ticker))); recalculate(); refreshAllPrices(true)}
 
-async function fetchWithTimeout(url, timeout=8500){
+async function fetchWithTimeout(url, timeout=12000){
   const ctrl=new AbortController(); const timer=setTimeout(()=>ctrl.abort(),timeout);
-  try{const res=await fetch(url,{cache:"no-store",signal:ctrl.signal}); if(!res.ok)throw new Error("HTTP "+res.status); return await res.json()}
+  try{
+    const res=await fetch(url,{
+      cache:"no-store",
+      signal:ctrl.signal,
+      headers:{ "Accept":"application/json,text/plain,*/*" }
+    });
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    return await res.json();
+  }
   finally{clearTimeout(timer)}
 }
 function yahooUrls(ticker){
   const s=encodeURIComponent(ticker), cb=Date.now();
-  const direct=[
+
+  // Yahoo chart URLs. These are tried in multiple ranges because some tickers,
+  // markets, or closed-market sessions do not return 1-minute data.
+  const yahooRaw=[
     `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=1m&range=1d&_=${cb}`,
     `https://query2.finance.yahoo.com/v8/finance/chart/${s}?interval=1m&range=1d&_=${cb}`,
     `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=5m&range=5d&_=${cb}`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${s}?interval=5m&range=5d&_=${cb}`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=1d&range=1mo&_=${cb}`,
     `https://query2.finance.yahoo.com/v8/finance/chart/${s}?interval=1d&range=1mo&_=${cb}`
   ];
-  const relays=[
-    ...direct.map(u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`),
-    ...direct.map(u=>`https://corsproxy.io/?${encodeURIComponent(u)}`)
-  ];
-  return [...direct,...relays];
+
+  // Optional private proxy, if the user has one. This is best for production.
+  const privateProxy = yahooProxyBase ? [`${yahooProxyBase}${s}&_=${cb}`] : [];
+
+  // Single-file GitHub Pages mode:
+  // Direct Yahoo often gets blocked by browser CORS. These public relay fallbacks
+  // let the dashboard remain copy-pasteable as one HTML file. They are not as
+  // reliable as your own proxy, but they avoid requiring a second file/server.
+  const relayUrls = [];
+  yahooRaw.forEach(u => {
+    const encoded = encodeURIComponent(u);
+    relayUrls.push(`https://api.allorigins.win/raw?url=${encoded}`);
+    relayUrls.push(`https://corsproxy.io/?${encoded}`);
+    relayUrls.push(`https://api.codetabs.com/v1/proxy?quest=${encoded}`);
+  });
+
+  // Try private proxy first, then direct Yahoo, then public relays.
+  return [...privateProxy, ...yahooRaw, ...relayUrls];
+}
+function parseQuoteData(data){
+  if(data && Number.isFinite(Number(data.price))){
+    const price=Number(data.price);
+    let dayMove=null;
+    if(Number.isFinite(Number(data.dayMovePercent))) dayMove=Number(data.dayMovePercent);
+    else if(Number.isFinite(Number(data.dayMove)) && Number.isFinite(Number(data.previousClose)) && Number(data.previousClose)!==0){
+      dayMove=(Number(data.dayMove)/Number(data.previousClose))*100;
+    }
+    return {price, dayMove, time:Date.now(), proxied:true};
+  }
+  return parseYahoo(data);
 }
 function parseYahoo(data){
   const result=data?.chart?.result?.[0]; if(!result)throw new Error("No Yahoo result");
@@ -255,7 +339,7 @@ function parseYahoo(data){
 }
 async function getQuote(ticker){
   for(const url of yahooUrls(ticker)){
-    try{return parseYahoo(await fetchWithTimeout(url))}
+    try{return parseQuoteData(await fetchWithTimeout(url))}
     catch(e){}
   }
   const cached=quoteCache[ticker];
@@ -270,7 +354,8 @@ async function fetchPriceForRow(i, manual=false){
     const q=await getQuote(ticker);
     assets[i].price=q.price; assets[i].dayMove=q.dayMove; assets[i].quoteStatus=q.cached ? "Cached" : "Updated";
     if(!q.cached){quoteCache[ticker]={price:q.price,dayMove:q.dayMove,time:q.time}; localStorage.setItem("itaQuoteCache",JSON.stringify(quoteCache))}
-    setStatus(`${ticker} quote ${q.cached ? "loaded from cache" : "updated from Yahoo"}.`, q.cached ? "warn" : "good");
+    const source = q.cached ? "cache" : (q.proxied ? "Yahoo proxy" : "Yahoo direct");
+    setStatus(`${ticker} quote loaded from ${source}.`, q.cached ? "warn" : "good");
   }catch(e){
     assets[i].quoteStatus="Yahoo unavailable"; setStatus(`Yahoo quote unavailable for ${ticker}. Check the symbol, browser permissions, or network.`, "bad");
   }
@@ -353,7 +438,6 @@ function drawLine(){const el=document.getElementById("lineChart"); if(!el)return
 function drawPie(){const el=document.getElementById("pieChart"); if(!el)return; const w=640,h=310,cx=180,cy=155,r=105,total=assets.reduce((s,a)=>s+Number(a.allocation||0),0)||1,colors=["#2563eb","#0891b2","#7c3aed","#d97706","#16a34a","#dc2626","#64748b"];let angle=-Math.PI/2,out="";assets.forEach((a,i)=>{const slice=(a.allocation/total)*Math.PI*2,x1=cx+Math.cos(angle)*r,y1=cy+Math.sin(angle)*r,x2=cx+Math.cos(angle+slice)*r,y2=cy+Math.sin(angle+slice)*r,large=slice>Math.PI?1:0;out+=`<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${colors[i%colors.length]}" opacity=".92"></path>`;angle+=slice});assets.forEach((a,i)=>{const y=65+i*28;out+=svg("rect",{x:340,y:y-12,width:14,height:14,rx:3,fill:colors[i%colors.length]});out+=svg("text",{x:362,y,fill:"#172033","font-size":13},`${a.ticker}: ${Number(a.allocation||0).toFixed(1)}%`)});el.innerHTML=out}
 
 function startPriceAutoRefresh(){if(refreshTimer)clearInterval(refreshTimer); refreshTimer=setInterval(()=>refreshAllPrices(false),60000)}
-document.addEventListener("DOMContentLoaded",()=>{recalculate(); refreshAllPrices(true); startPriceAutoRefresh()});
+document.addEventListener("DOMContentLoaded",()=>{hydrateYahooProxyInput(); recalculate(); refreshAllPrices(true); startPriceAutoRefresh()});
 </script>
 </body>
-</html>
